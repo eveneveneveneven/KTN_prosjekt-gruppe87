@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import SocketServer
-
+import json
 
 class ClientHandler(SocketServer.BaseRequestHandler):
     """
@@ -22,6 +22,26 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         while True:
             received_string = self.connection.recv(4096)
             
+            payload = json.dumps(received_string)
+            message = payload.split(' ')    
+            # fant ingen switch().....
+            if (message[1] == "login"):
+                pass #set username
+
+            elif (message[1] == "logout"):
+                pass # selfdestruct!
+
+            elif (message[1] == "names"):
+                pass # get a list of names
+
+            elif (message[1] == "msg"):
+                pass # broadcast message
+
+            elif (message[1] == "help"):
+                pass # make a helpfull guide
+            else:
+                pass #command not found error message
+
             # TODO: Add handling of received payload from client
 
 
