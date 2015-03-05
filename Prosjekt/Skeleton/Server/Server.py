@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import SocketServer
 import json
+import string
 
 class ClientHandler(SocketServer.BaseRequestHandler):
     """
@@ -17,6 +18,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         self.ip = self.client_address[0]
         self.port = self.client_address[1]
         self.connection = self.request
+        print "Client connected: " + self.ip + ":" + str(self.port) 
 
         # Loop that listens for messages from the client
         while True:
@@ -29,6 +31,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                 pass #set username
 
             elif (message[1] == "logout"):
+                print "Client disconnected: "+ self.ip + ":" + str(self.port) 
                 pass # selfdestruct!
 
             elif (message[1] == "names"):

@@ -31,7 +31,7 @@ class Client:
             if userinput[0] == "logout":    
                 self.disconnect()
             payload = json.dumps(userinput)
-            send_payload(payload)
+            self.send_payload(payload)
 
     def disconnect(self):
         self.connection.close()
