@@ -31,7 +31,8 @@ class Client:
             if userinput[0] == "logout":    
                 self.disconnect()
             payload = json.dumps(userinput)
-            send_payload(payload)
+            print payload
+            self.send_payload(payload)
 
     def disconnect(self):
         self.connection.close()
@@ -47,8 +48,8 @@ class Client:
     def send_payload(self, data):
         self.connection.send(json.dumps(data))
         recv = json.loads(self.connection.recv(4048))
-        if recv != "whatever":
-            self.disconnect()
+        #if recv != "whatever":
+        #       self.disconnect()
 
 
 if __name__ == '__main__':

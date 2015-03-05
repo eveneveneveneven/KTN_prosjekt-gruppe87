@@ -21,23 +21,23 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         # Loop that listens for messages from the client
         while True:
             received_string = self.connection.recv(4096)
-            
             payload = json.dumps(received_string)
-            message = payload.split(' ')    
-            # fant ingen switch().....
-            if (message[1] == "login"):
+            message = payload.split(' ')  
+            print message
+            if (message[0] == "login"):
+            	print "Hello"
                 pass #set username
 
-            elif (message[1] == "logout"):
+            elif (message[0] == "logout"):
                 pass # selfdestruct!
 
-            elif (message[1] == "names"):
+            elif (message[0] == "names"):
                 pass # get a list of names
 
-            elif (message[1] == "msg"):
+            elif (message[0] == "msg"):
                 pass # broadcast message
 
-            elif (message[1] == "help"):
+            elif (message[0] == "help"):
                 pass # make a helpfull guide
             else:
                 pass #command not found error message
