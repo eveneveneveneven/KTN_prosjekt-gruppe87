@@ -32,7 +32,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
             	username = payload['content']
             	print "Hello "+payload['content']
             	welcome = json.dumps({'timestamp': timestamp,
-            						  'sender': username,
+            						  'sender': 'Server',
                 					  'response': '200 OK',            						  
                                       'content' : "Hello "+username})
             	self.connection.send(welcome)

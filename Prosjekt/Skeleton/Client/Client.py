@@ -17,12 +17,8 @@ class Client:
         # Set up the socket connection to the server
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.connect(("localhost", 9998))
-
+        MessageReceiver(self, self.connection)
         self.run()
-
-        MessageReceiver(self, self.connection) #pass thread?
-
-        # TODO: Finish init process with necessary code
 
     def run(self):
         # Initiate the connection to the server
@@ -49,14 +45,14 @@ class Client:
         # TODO: Handle disconnection
 
     def receive_message(self, message):
-        print message['request']+': '+message['content'] 
+        print message['sender']+': '+message['content'] 
 
     def send_payload(self, data):
         self.connection.send(data)
         #Dette skal mssageReciever gjøre, me måtte debugge stuff
-        recv = self.connection.recv(4096)
-        message = json.loads(recv)
-        print message['sender']+': '+message['content'] 
+        #recv = self.connection.recv(4096)
+        #message = json.loads(recv)
+        #print message['sender']+': '+message['content'] 
 
 
 
