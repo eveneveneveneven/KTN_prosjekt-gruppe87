@@ -2,6 +2,7 @@
 import socket
 import json
 from MessageReceiver import *
+import re
 
 class Client:
     """
@@ -27,12 +28,18 @@ class Client:
         # Initiate the connection to the server
         while True:
             userinput = raw_input()
-            userinput = userinput.split(' ')
-            if userinput[0] == "logout":    
+            if userinput.split(' ')[0] == "logout":    
                 self.disconnect()
-            payload = json.dumps(userinput)
-            print payload
-            self.send_payload(payload)
+
+            if len(re.findall(r'\w+', userinput)) > 1: #Må fikses for names og help...
+                splitted = userinput.split(' ', 1)
+                cmd = splitted[0]
+                message = splitted[1]
+                payload = json.dumps({'request': cmd,
+                                      'content' : message})
+                self.send_payload(payload)
+            else:
+                print "Not valid"
 
     def disconnect(self):
         self.connection.close()
@@ -42,14 +49,15 @@ class Client:
         # TODO: Handle disconnection
 
     def receive_message(self, message):
-        print json.loads(message)
-        # TODO: Handle incoming message
+        print message['request']+': '+message['content'] 
 
     def send_payload(self, data):
-        self.connection.send(json.dumps(data))
-        recv = json.loads(self.connection.recv(4048))
-        #if recv != "whatever":
-        #       self.disconnect()
+        self.connection.send(data)
+        #Dette skal mssageReciever gjøre, me måtte debugge stuff
+        recv = self.connection.recv(4096)
+        message = json.loads(recv)
+        print message['sender']+': '+message['content'] 
+
 
 
 if __name__ == '__main__':

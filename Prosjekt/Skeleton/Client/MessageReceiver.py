@@ -18,17 +18,17 @@ class MessageReceiver(Thread):
         # Flag to run thread as a deamon
         self.daemon = True
    
-        connection.listen(5)
+        #connection.listen(5)
+        self.connection = connection
         self.run(connection)
 
         # TODO: Finish initialization of MessageReceiver
 
-    def run(self,connection):
-        streng = ""
+    def run(self):
         while True:
-            streng = streng + connection.recv(1024)
-            if streng.endswith(u"\r\n"):
-                receive_message(self.data)
-                streng = ""
+            received_string = self.connection.recv(4096)
+            payload = json.loads(received_string)
+            receive_message(payload)
+            received_string = ""
         # TODO: Make MessageReceiver receive and handle payloads
 
