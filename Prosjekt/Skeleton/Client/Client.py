@@ -52,7 +52,7 @@ class Client:
         # Process data
         # info message from server
         if data['response'] == 'info':
-             print "--->" + data['timestamp'] + " Server: " + str(data['content'])
+             print "--->" + data['timestamp'] + " Server Info: " + data['content']
             
         # message from a user
         elif data['response'] == 'message':
@@ -60,12 +60,13 @@ class Client:
              
         # error message from server 
         elif data['response'] == 'error':
-            print "--->" + data['timestamp'] + " Server: " + data['content']
+            print "--->" + data['timestamp'] + " Server Error: " + data['content']
            
         # server message history 
         elif data['response'] == 'history':
+            print "--->"
             print "====Server History:===="
-            print "--->" + data['content']
+            print data['content']
             print "======================="
 
 

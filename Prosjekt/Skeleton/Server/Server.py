@@ -77,36 +77,44 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         #initially we are not logged in and have no username.
         self.loggedin = False
         self.username = None
-        ts = time.time()
 
         #register this client with the state object (in main).
         state.registerClient(self)
 
-        # print to console
-        print "Client connected (" + self.ip + ")"
+        # get time and print to console
+        print self.getCurrentTime() + " Client connected (" + self.ip + ")"
 
         # Loop that listens for messages from the client
         while True:
-            #retreive the json formatted message
+            
+            #retreive the json formatted message from the client
             message = self.connection.recv(4096)
-            timestamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
 
-            data = json.loads(message) #converts the string to a dictionary object in our case
+            #converts the message to a dictionary object in our case
+            data = json.loads(message)
+
+            # Get the time
+            timestamp = self.getCurrentTime()
       
             #process the message (dictionary object)
             if (data['request'] == "login"):
 
-                #TODO: Handle bad username format.
-                if self.loggedin == True:
-                    self.sendResponse(timestamp, None, 'info', 'Already logged in')
+                # Allready logged in?
+                if self.loggedin:
+                    self.sendResponse(timestamp, None, 'error', 'Already logged in')
+
+                # if we are not logged in
                 else:
+
+                    # Check that the username is good
                     if re.match('^\w+$', data['content']):
+
                         #get username and add a mapping to state object.
                         self.username = data['content']
                         state.createUserClientMap(self.username, self)
 
                         #output to server console
-                        print str(self.username) + " logged in."
+                        print timestamp + " " + str(self.username) + " logged in."
 
                         #set us as logged in.
                         self.loggedin = True
@@ -114,26 +122,34 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                         #send response veryfying successful login.
                         self.sendResponse(timestamp, None, 'info', 'Login successful')
                     else:
-                        self.sendResponse(timestamp, None, 'info', 'Bad username, use only A-Z, a-z, 0-9')
+                        self.sendResponse(timestamp, None, 'error', 'Bad username, use only A-Z, a-z, 0-9')
 
 
 
             elif (data['request'] == "logout"):
                 
-                # Unmap the user from the state class
-                state.removeUserClientMap(self.username)
+                # Check that we are logged in.
+                if self.loggedin:
+                    # Unmap the user from the state class
+                    state.removeUserClientMap(self.username)
 
-                # Output to server console
-                print "User " + self.username + " logged out."
+                    # Output to server console
+                    print timestamp + " " + "User " + self.username + " logged out."
 
-                # Reset variables
-                self.username = None
-                self.loggedin = False
+                    # Reset variables
+                    self.username = None
+                    self.loggedin = False
 
-                # Send a response to client informing of the successful logout
-                self.sendResponse(timestamp, None, 'info', 'You are logged out')
+                    # Send a response to client informing of the successful logout
+                    self.sendResponse(timestamp, None, 'info', 'You are logged out')
 
-                # ? Close Connection and unregister client ?
+                    # ? Close Connection and unregister client ?
+
+                else:
+                    
+                    # Send error message.
+                    self.sendResponse(timestamp, None, 'error', 'You are not logged in')
+
 
 
             elif (data['request'] == "names"):
@@ -151,27 +167,33 @@ class ClientHandler(SocketServer.BaseRequestHandler):
 
             elif (data['request'] == "msg"):
                 
-                # Log the message in the server history
-                message = self.username + ": " + data['content']
-                print message
-                state.logMessage(message)
+                if self.loggedin:
+                    # Log the message in the server history
+                    message = timestamp + " " + self.username + ": " + data['content']
+                    print message
+                    state.logMessage(message)
 
-                # Broadcast the message to all clients
-                state.broadcastMessage(self.username, data['content'], timestamp)
+                    # Broadcast the message to all clients
+                    state.broadcastMessage(self.username, data['content'], timestamp)
+                else:
+
+                    # Send error message to client
+                    self.sendResponse(timestamp, None, 'error', "You need to login to send messages")
+
 
 
             elif (data['request'] == "help"):
 
                 # The help message to send back
-                message = "Type: login <username> to login, logout to logout, msg <message> to send message, names to get a list of logged in users, help for help"
+                message = "Type: login <username> to login, logout to logout, msg <message> to send message, names to get a list of logged in users, help for help, history for the server message history, and disconnect to exit client."
 
                 # Send response with help message
                 self.sendResponse(timestamp, None, 'info', message)
 
             elif (data['request'] == "history"):
                 # Create a string from the list
-                users = '\n' + string.join(state.MessageHistory, '\n')
-                self.sendResponse(timestamp, None, 'info', users)
+                users = string.join(state.MessageHistory, '\n')
+                self.sendResponse(timestamp, None, 'history', users)
 
 
             # Client was nice and informed us it disconnected
@@ -184,8 +206,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
 
             else:
                 self.sendResponse(timestamp, None, 'error', 'Unknown request')
-                print "Unknown Request"
-                print data
+                print timestamp + " Unknown Request: " + data['request']
 
 
 
@@ -194,17 +215,38 @@ class ClientHandler(SocketServer.BaseRequestHandler):
     # Gets called after handle()
     def finish(self):
 
+
+        # Get current time
+        timestamp = self.getCurrentTime()
+
         # Clean up login state
         if self.loggedin:
             state.removeUserClientMap(self.username)
 
+            # Output to server console
+            print timestamp + " " + "User " + self.username + " logged out."
+
+
         # Make sure to unregister this client from the state
         state.unregisterClient(self)
+
+        # Output to server console
+        print timestamp + " Client disconnected (" + self.ip + ")"
 
         #Close the socket.
         self.connection.close()
 
 
+
+    # Returnst the current time in h/m/s as a string
+    def getCurrentTime(self):
+ 
+        # Get the current time.
+        ts = time.time()
+        timestamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+
+        return timestamp
+       
 
 
 
