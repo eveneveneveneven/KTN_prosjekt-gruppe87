@@ -52,15 +52,15 @@ class Client:
         # Process data
         # info message from server
         if data['response'] == 'info':
-             print "--->" + "Server: " + str(data['content'])
+             print "--->" + data['timestamp'] + " Server: " + str(data['content'])
             
         # message from a user
         elif data['response'] == 'message':
-            print "--->" + data['sender'] + ": " + data['content']
+            print "--->" + data['timestamp'] + ' ' + data['sender'] + ": " + data['content']
              
         # error message from server 
         elif data['response'] == 'error':
-            print "--->" + "Server: " + data['content']
+            print "--->" + data['timestamp'] + " Server: " + data['content']
            
         # server message history 
         elif data['response'] == 'history':
@@ -125,6 +125,12 @@ class Client:
             # Send the data to the server.
             self.send_payload(self.lastMessage)
 
+        elif usercommand == "history": 
+            self.lastMessage['request'] = 'history' 
+            self.lastMessage['content'] = None 
+            
+            # Send the data to the server.
+            self.send_payload(self.lastMessage)
 
         elif usercommand == "msg":    
 

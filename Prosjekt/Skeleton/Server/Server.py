@@ -2,6 +2,9 @@
 import SocketServer
 import string
 import json
+import time
+import datetime
+import re
 
 # Need some way of storing the server state (what clients are connected, users logged in, etc...)
 class ServerState:
@@ -33,10 +36,10 @@ class ServerState:
         self.MessageHistory.append(Message)
 
     # Broadcast message to all users
-    def broadcastMessage(self, username, message):
+    def broadcastMessage(self, username, message, timestamp):
         # loop over every client in the list and send message from username
         for client in self.ClientList:
-            client.sendResponse(None, username, 'message', message)
+            client.sendResponse(timestamp, username, 'message', message)
 
 
 
@@ -72,8 +75,9 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         self.connection = self.request
 
         #initially we are not logged in and have no username.
-        loggedin = False
-        username = None
+        self.loggedin = False
+        self.username = None
+        ts = time.time()
 
         #register this client with the state object (in main).
         state.registerClient(self)
@@ -83,30 +87,35 @@ class ClientHandler(SocketServer.BaseRequestHandler):
 
         # Loop that listens for messages from the client
         while True:
-
             #retreive the json formatted message
             message = self.connection.recv(4096)
+            timestamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+
             data = json.loads(message) #converts the string to a dictionary object in our case
-
-
+      
             #process the message (dictionary object)
             if (data['request'] == "login"):
 
                 #TODO: Handle bad username format.
+                if self.loggedin == True:
+                    self.sendResponse(timestamp, None, 'info', 'Already logged in')
+                else:
+                    if re.match('^\w+$', data['content']):
+                        #get username and add a mapping to state object.
+                        self.username = data['content']
+                        state.createUserClientMap(self.username, self)
 
+                        #output to server console
+                        print str(self.username) + " logged in."
 
-                #get username and add a mapping to state object.
-                self.username = data['content']
-                state.createUserClientMap(self.username, self)
+                        #set us as logged in.
+                        self.loggedin = True
 
-                #output to server console
-            	print str(self.username) + " logged in."
+                        #send response veryfying successful login.
+                        self.sendResponse(timestamp, None, 'info', 'Login successful')
+                    else:
+                        self.sendResponse(timestamp, None, 'info', 'Bad username, use only A-Z, a-z, 0-9')
 
-                #set us as logged in.
-                self.loggedin = True
-
-                #send response veryfying successful login.
-                self.sendResponse(None, None, 'info', 'Login successful')
 
 
             elif (data['request'] == "logout"):
@@ -122,7 +131,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                 self.loggedin = False
 
                 # Send a response to client informing of the successful logout
-                self.sendResponse(None, None, 'info', 'You are logged out')
+                self.sendResponse(timestamp, None, 'info', 'You are logged out')
 
                 # ? Close Connection and unregister client ?
 
@@ -136,7 +145,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                 users = string.join(users, ', ')
 
                 # Send the string of names to the client
-                self.sendResponse(None, None, 'info', users)
+                self.sendResponse(timestamp, None, 'info', users)
 
 
 
@@ -148,7 +157,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                 state.logMessage(message)
 
                 # Broadcast the message to all clients
-                state.broadcastMessage(self.username, data['content'])
+                state.broadcastMessage(self.username, data['content'], timestamp)
 
 
             elif (data['request'] == "help"):
@@ -157,7 +166,12 @@ class ClientHandler(SocketServer.BaseRequestHandler):
                 message = "Type: login <username> to login, logout to logout, msg <message> to send message, names to get a list of logged in users, help for help"
 
                 # Send response with help message
-                self.sendResponse(None, None, 'info', message)
+                self.sendResponse(timestamp, None, 'info', message)
+
+            elif (data['request'] == "history"):
+                # Create a string from the list
+                users = '\n' + string.join(state.MessageHistory, '\n')
+                self.sendResponse(timestamp, None, 'info', users)
 
 
             # Client was nice and informed us it disconnected
@@ -169,7 +183,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
 
 
             else:
-                self.sendResponse(None, None, 'error', 'Unknown request')
+                self.sendResponse(timestamp, None, 'error', 'Unknown request')
                 print "Unknown Request"
                 print data
 
