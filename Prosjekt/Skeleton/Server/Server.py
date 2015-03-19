@@ -4,6 +4,7 @@ import string
 import json
 import time
 import datetime
+<<<<<<< HEAD
 import re
 
 # Need some way of storing the server state (what clients are connected, users logged in, etc...)
@@ -42,6 +43,8 @@ class ServerState:
             client.sendResponse(timestamp, username, 'message', message)
 
 
+=======
+>>>>>>> master
 
 class ClientHandler(SocketServer.BaseRequestHandler):
     """
@@ -73,6 +76,8 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         self.ip = self.client_address[0]
         self.port = self.client_address[1]
         self.connection = self.request
+        username = self.ip
+        ts = time.time()
 
         #initially we are not logged in and have no username.
         self.loggedin = False
@@ -86,6 +91,7 @@ class ClientHandler(SocketServer.BaseRequestHandler):
 
         # Loop that listens for messages from the client
         while True:
+<<<<<<< HEAD
             
             #retreive the json formatted message from the client
             message = self.connection.recv(4096)
@@ -248,6 +254,50 @@ class ClientHandler(SocketServer.BaseRequestHandler):
         return timestamp
        
 
+=======
+            received_string = self.connection.recv(4096)
+            payload = json.loads(received_string)
+            timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+            if (payload['request'] == "login"):
+            	username = payload['content']
+            	print "Hello "+payload['content']
+            	welcome = json.dumps({'timestamp': timestamp,
+            						  'sender': 'Server',
+                					  'response': '200 OK',            						  
+                                      'content' : "Hello "+username})
+            	self.connection.send(welcome)
+
+            elif (payload['request'] == "logout"):
+                pass # selfdestruct!
+
+            elif (payload['request'] == "names"):
+                pass # get a list of names
+
+            elif (payload['request'] == "msg"):
+                print username+' '+payload['content']
+            	message = json.dumps({'timestamp': timestamp,
+            						  'sender': username,
+                					  'response': '200 OK',          						  
+                                      'content' : payload['content']})
+            	self.connection.send(message)
+
+            elif (payload['request'] == "help"):
+                print 'Something, something...'
+                message = json.dumps({'timestamp': timestamp,
+                					  'sender': 'Server',
+                					  'response': '200 OK',
+                					  'content' : 'Something, somethin'})
+            	self.connection.send(message)
+
+            else:
+                print 'Command not found!'
+                message = json.dumps({'timestamp': timestamp,
+                					  'sender': 'Server',
+                					  'response': '200 OK',
+               						  'content' : 'Command not found!'})
+            	self.connection.send(message)
+>>>>>>> master
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
