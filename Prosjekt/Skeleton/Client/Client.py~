@@ -3,7 +3,6 @@ import socket
 import json
 import string
 from MessageReceiver import *
-import re
 
 class Client:
     """
@@ -19,7 +18,6 @@ class Client:
 
         # Set up the socket connection to the server
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-<<<<<<< HEAD
         self.connection.connect((host, server_port))
 
         # Start listening for server messages.
@@ -30,12 +28,6 @@ class Client:
         # CODE BELOW WON'T EXECUTE 
 
 
-=======
-        self.connection.connect(("localhost", 9998))
-        MessageReceiver(self, self.connection)
-        self.run()
-
->>>>>>> master
     def run(self):
 
         print "Connected to Server..."
@@ -43,24 +35,8 @@ class Client:
         # Initiate the connection to the server
         while True:
             userinput = raw_input()
-<<<<<<< HEAD
             self.processClientInput(userinput)
            
-=======
-            if userinput.split(' ')[0] == "logout":    
-                self.disconnect()
-
-            if len(re.findall(r'\w+', userinput)) > 1: #Må fikses for names og help...
-                splitted = userinput.split(' ', 1)
-                cmd = splitted[0]
-                message = splitted[1]
-                payload = json.dumps({'request': cmd,
-                                      'content' : message})
-                self.send_payload(payload)
-            else:
-                print "Not valid"
-
->>>>>>> master
     def disconnect(self):
         self.connection.close()
         print "Disconnected from server"
@@ -69,10 +45,6 @@ class Client:
 
     # process input from server.
     def receive_message(self, message):
-<<<<<<< HEAD
-=======
-        print message['sender']+': '+message['content'] 
->>>>>>> master
 
         # Convert the message to data.
         data = json.loads(message)
@@ -107,15 +79,6 @@ class Client:
 
     # send object to server.
     def send_payload(self, data):
-<<<<<<< HEAD
-=======
-        self.connection.send(data)
-        #Dette skal mssageReciever gjøre, me måtte debugge stuff
-        #recv = self.connection.recv(4096)
-        #message = json.loads(recv)
-        #print message['sender']+': '+message['content'] 
-
->>>>>>> master
 
         # convert to json fomatted string
         message = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': ')) # Matches project description
